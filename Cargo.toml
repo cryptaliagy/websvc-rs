@@ -6,10 +6,10 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-chrono = "0.4.23"
+chrono = { version = "0.4.23", default-features = false, features = ["std", "clock"] }
 config = { version = "0.13.3" }
-fern = { version = "0.6.1", features = ["colored", "chrono"] }
-log = "0.4.17"
+fern = { version = "0.6.1", features = ["colored"] }
+log = { version = "0.4.17", features = ["std"] }
 rocket = { version = "0.5.0-rc.2", features = ["json"] }
 serde = "1.0.152"
 
