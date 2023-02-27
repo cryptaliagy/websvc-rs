@@ -1,19 +1,16 @@
-use std::time::SystemTime;
-
-use chrono::Utc;
-
 use rocket::fairing::{Fairing, Info, Kind};
 use rocket::http::Header;
 use rocket::serde::Serialize;
 use rocket::{Data, Request, Response};
+use std::time::SystemTime;
+
+use log::info;
 
 use crate::utils;
 
 /// Fairing for timing requests.
-pub struct RequestTimer {
-    /// The format that should be used for date logging.
-    date_format: String,
-}
+#[derive(Default)]
+pub struct RequestTimer {}
 
 /// Value stored in request-local state.
 #[derive(Copy, Clone)]
@@ -43,21 +40,6 @@ pub trait Configuration {
     fn feedback_webhook(&self) -> Option<&str>;
 }
 
-impl RequestTimer {
-    /// Gets the current time as a string in the configured format.
-    pub fn now(&self) -> String {
-        Utc::now().format(&self.date_format).to_string()
-    }
-}
-
-impl Default for RequestTimer {
-    fn default() -> Self {
-        Self {
-            date_format: "%Y-%m-%d - %H:%M:%S".to_string(),
-        }
-    }
-}
-
 #[rocket::async_trait]
 impl Fairing for RequestTimer {
     fn info(&self) -> Info {
@@ -82,9 +64,8 @@ impl Fairing for RequestTimer {
         let start_time = req.local_cache(|| TimerStart(None));
         if let Some(Ok(duration)) = start_time.0.map(|st| st.elapsed()) {
             let formatted = utils::format_duration(duration);
-            println!(
-                "{time} | {method:^7} | {duration:>12} | {status} | \"{uri}\"",
-                time = self.now(),
+            info!(
+                "{method:<7} | {duration:>12} | {status} | \"{uri}\"",
                 method = req.method(),
                 uri = req.uri(),
                 duration = formatted,

@@ -7,6 +7,15 @@ use serde::{Deserialize, Serialize};
 pub struct AppConfig {
     #[serde(default = "_default_false")]
     profiling: bool,
+
+    #[serde(default = "_default_false")]
+    log_all: bool,
+
+    #[serde(default = "_default_format")]
+    time_format: String,
+
+    #[serde(default = "_default_level")]
+    log_level: String,
 }
 
 impl AppConfig {
@@ -28,10 +37,45 @@ impl AppConfig {
     pub fn enable_profiling(&mut self, val: bool) {
         self.profiling = val;
     }
+
+    /// Gets a value specifying the format that times should appear
+    /// with in the logs
+    pub fn time_format(&self) -> &str {
+        &self.time_format
+    }
+
+    /// Gets a value indicating the log level filter to use
+    /// for logging
+    pub fn level(&self) -> log::LevelFilter {
+        match self.log_level.to_ascii_lowercase().as_str() {
+            "off" => log::LevelFilter::Off,
+            "error" => log::LevelFilter::Error,
+            "warn" => log::LevelFilter::Warn,
+            "info" => log::LevelFilter::Info,
+            "debug" => log::LevelFilter::Debug,
+            "trace" => log::LevelFilter::Trace,
+            _ => panic!("Could not determine log level"),
+        }
+    }
+
+    /// Gets a value indicating whether logs should be filtered to
+    /// only be emitted from the service (false), or if all logs generated
+    /// by library dependencies should be included
+    pub fn log_all(&self) -> bool {
+        self.log_all
+    }
 }
 
 fn _default_false() -> bool {
     false
+}
+
+fn _default_format() -> String {
+    "%Y-%m-%d - %H:%M:%S".to_string()
+}
+
+fn _default_level() -> String {
+    "info".to_string()
 }
 
 #[cfg(test)]

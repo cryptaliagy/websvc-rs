@@ -1,6 +1,10 @@
 #[macro_use]
 extern crate rocket;
 
+use fern::colors::{Color, ColoredLevelConfig};
+use log::{debug, info};
+
+use rocket::fairing::AdHoc;
 use rocket::serde::json::Json;
 use rocket::{Build, Rocket, State};
 
@@ -33,9 +37,14 @@ async fn show_configs(configs: &State<AppConfig>) -> Json<&AppConfig> {
 /// The configuration passed in will be made available to routes using the `&State<AppConfig>`
 /// type as a parameter in the function.
 fn build_rocket(configs: AppConfig) -> Rocket<Build> {
+    info!("Building rocket...");
     let ship = rocket::build();
 
+    // All fairings should be attached below here and before the routes
+    // vector is constructed. This ensures that the logging fairings are the
+    // last ones to be executed.
     let ship = if configs.profiling_enabled() {
+        debug!("Profiling enabled! Attaching fairing...");
         ship.attach(RequestTimer::default())
     } else {
         ship
@@ -54,13 +63,22 @@ fn build_rocket(configs: AppConfig) -> Rocket<Build> {
     // `if cfg!(debug_assertions) {}`
     #[cfg(debug_assertions)]
     {
-        println!("Adding debug routes");
+        debug!("Debug profile enabled! Adding debug routes to routes vector...");
         let mut debug_routes = routes![show_configs];
 
         routes.append(&mut debug_routes);
     };
 
-    ship.manage(configs).mount("/", routes)
+    debug!("Mounting state and routes...");
+    ship.attach(AdHoc::on_ignite("logging ignite", |rocket| async {
+        info!("Ignition complete! Launching rocket...");
+        rocket
+    }))
+    .attach(AdHoc::on_liftoff("logging liftoff", |_| {
+        Box::pin(async { info!("Launch complete! Service 'websvc' is running") })
+    }))
+    .manage(configs)
+    .mount("/", routes)
 }
 
 /// This compiles down to the main function of the application using the #[launch] macro.
@@ -68,12 +86,45 @@ fn build_rocket(configs: AppConfig) -> Rocket<Build> {
 /// server.
 #[launch]
 async fn rocket() -> _ {
+    #[cfg(debug_assertions)]
     println!("Building configuration...");
-
     let config = AppConfig::build().expect("Could not build configuration from environment");
 
-    println!("Starting server...");
-    build_rocket(config)
+    #[cfg(debug_assertions)]
+    println!("Building logger...");
+
+    let date_fmt: String = config.time_format().to_string();
+
+    let colors = ColoredLevelConfig::new()
+        .debug(Color::Cyan)
+        .info(Color::Green)
+        .warn(Color::Yellow)
+        .error(Color::Red);
+
+    let mut log_config = fern::Dispatch::new()
+        .format(move |out, message, record| {
+            out.finish(format_args!(
+                "[{}][{}][{}]\t{}",
+                chrono::Utc::now().format(&date_fmt),
+                record.target(),
+                colors.color(record.level()),
+                message,
+            ))
+        })
+        .level(config.level())
+        .chain(std::io::stdout());
+
+    if !config.log_all() {
+        log_config = log_config.filter(|metadata| metadata.target().starts_with("websvc"))
+    }
+
+    log_config.apply().unwrap();
+
+    debug!("Logger configuration finished!");
+    let ship = build_rocket(config);
+
+    info!("Rocket build! Igniting rocket...");
+    ship
 }
 
 #[cfg(test)]
