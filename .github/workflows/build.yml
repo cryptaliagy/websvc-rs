@@ -34,7 +34,7 @@ jobs:
       - name: Push the debug container
         uses: docker/build-push-action@v3
         with:
-          file: devstack/Dockerfile
+          file: Dockerfile
           push: true
           target: debug
           tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:debug,${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:$(cat VERSION).${{ github.run_number }}-debug
@@ -42,7 +42,7 @@ jobs:
       - name: Push the runner container
         uses: docker/build-push-action@v3
         with:
-          file: devstack/Dockerfile
+          file: Dockerfile
           push: true
-          target: runner
+          target: prod
           tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest,${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:$(cat VERSION).${{ github.run_number }}
