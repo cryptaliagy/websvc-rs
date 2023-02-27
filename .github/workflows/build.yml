@@ -1,8 +1,13 @@
-name: build
+name: build_publish_container
 
 on:
   push:
     branches: [main]
+    paths:
+      - "src"
+      - "Cargo.toml"
+      - "Cargo.lock"
+      - "Dockerfile"
 
 env:
   REGISTRY: ghcr.io
@@ -32,7 +37,7 @@ jobs:
           file: devstack/Dockerfile
           push: true
           target: debug
-          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:debug,${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:0.1.${{ github.run_number }}-debug
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:debug,${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:$(cat VERSION).${{ github.run_number }}-debug
 
       - name: Push the runner container
         uses: docker/build-push-action@v3
@@ -40,4 +45,4 @@ jobs:
           file: devstack/Dockerfile
           push: true
           target: runner
-          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest,${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:0.1.${{ github.run_number }}
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest,${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:$(cat VERSION).${{ github.run_number }}
