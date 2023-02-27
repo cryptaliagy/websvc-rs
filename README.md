@@ -31,7 +31,7 @@ As of 27-02-2023, these are the stats (with, of course, some variability):
 | debug   | 11.5 MB    | 932 KiB                      | 1.16 MiB                         |
 | prod    | 4.44 MB    | 924 KiB                      | 1.23 MiB                         |
 
-Additionally, I make some performance guarantees about service runtime as part of a test in [`src/main.rs](src/main.rs): The heartbeat route, under default configurations, should execute < 1 ms using the debug profile, and < 200 μs in release profile. This should hold relatively well even under more performance-constrained machines since Rust is very performant and the code is very simple; under my machine (i7-1185G7 @ 3.00GHz), `/heartbeat` requests took ~200 μs under debug and ~20-50 μs under release configurations.
+Additionally, I make some performance guarantees about service runtime as part of a test in [`src/main.rs`](src/main.rs): The heartbeat route, under default configurations, should execute < 1 ms using the debug profile, and < 200 μs in release profile. This should hold relatively well even under more performance-constrained machines since Rust is very performant and the code is very simple; under my machine (i7-1185G7 @ 3.00GHz), `/heartbeat` requests took ~200 μs under debug and ~20-50 μs under release configurations.
 
 Requests were run using the following python script:
 
