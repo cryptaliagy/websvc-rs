@@ -7,7 +7,7 @@ edition = "2021"
 
 [dependencies]
 chrono = { version = "0.4.23", default-features = false, features = ["std", "clock"] }
-config = { version = "0.13.3" }
+config = { version = "0.13.3", default-features = false }
 fern = { version = "0.6.1", features = ["colored"] }
 log = { version = "0.4.17", features = ["std"] }
 rocket = { version = "0.5.0-rc.2", features = ["json"] }
@@ -15,3 +15,9 @@ serde = "1.0.152"
 
 [dev-dependencies]
 serial_test = "1.0.0"
+
+[profile.release]
+strip = true
+
+[workspace]
+members = ["healthcheck"]
