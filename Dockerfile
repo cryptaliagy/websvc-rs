@@ -17,12 +17,15 @@ COPY Cargo.toml Cargo.lock ./
 
 # Create a fake binary target to be used for dependency caching locally, then clean it
 RUN mkdir src && echo "fn main() {}" > src/main.rs \
+	&& cargo new --bin healthcheck \
 	&& cargo build --target $(arch)-unknown-linux-musl \
 	&& cargo test --target $(arch)-unknown-linux-musl \
 	&& rm src/main.rs \
 	&& rm -rf target/$(arch)-unknown-linux-musl/release/deps/websvc*
 
 COPY src ./src
+
+COPY healthcheck ./healthcheck
 
 # Build the actual image. This is statically-linking in development as well
 # so the target matches what will be used in prod.
@@ -37,7 +40,10 @@ CMD ["./out/websvc"]
 # of the service
 FROM dev as builder
 
-RUN cargo build --release --target $(arch)-unknown-linux-musl && strip ./target/$(arch)-unknown-linux-musl/release/websvc -o websvc
+RUN cargo build --workspace --release --target $(arch)-unknown-linux-musl \
+	&& mkdir bin \
+	&& mv ./target/$(arch)-unknown-linux-musl/release/websvc \
+	./target/$(arch)-unknown-linux-musl/release/healthcheck  ./bin
 
 # Create a debug container with things like a shell and package manager for additional
 # tools. This could be used to debug the prod binary.
@@ -45,11 +51,14 @@ RUN cargo build --release --target $(arch)-unknown-linux-musl && strip ./target/
 # when this was created I was getting `trivy` vuln flags for that image.
 FROM alpine:latest as debug
 
-COPY --from=builder /app/websvc /websvc
+COPY --from=builder /app/bin/websvc /websvc
+COPY --from=builder /app/bin/healthcheck /healthcheck
 
 ENV ROCKET_ADDRESS 0.0.0.0
 ENV ROCKET_PORT 8000
 ENV ROCKET_IDENT false
+
+HEALTHCHECK --interval=30s --timeout=30s --start-period=2s --retries=3 CMD [ "/healthcheck" ]
 
 CMD ["/websvc"]
 
@@ -57,10 +66,13 @@ CMD ["/websvc"]
 # provides filesystem, tzdata, and prebuilt-ca-certificates.
 FROM scratch as prod
 
-COPY --from=builder /app/websvc /websvc
+COPY --from=builder /app/bin/websvc /websvc
+COPY --from=builder /app/bin/healthcheck /healthcheck
 
 ENV ROCKET_ADDRESS 0.0.0.0
 ENV ROCKET_PORT 8000
 ENV ROCKET_IDENT false
+
+HEALTHCHECK --interval=30s --timeout=30s --start-period=2s --retries=3 CMD [ "/healthcheck" ]
 
 CMD ["/websvc"]
