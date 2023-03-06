@@ -36,23 +36,7 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Push the debug container
-        uses: docker/build-push-action@v3
-        with:
-          file: Dockerfile
-          push: true
-          target: debug
-          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:debug,${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.version }}.${{ github.run_number }}-debug
-
-      - name: Push the runner container
-        uses: docker/build-push-action@v3
-        with:
-          file: Dockerfile
-          push: true
-          target: prod
-          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest,${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.version }}.${{ github.run_number }}
-
-      - name: Push the debug container
+      - name: Push the gnu debug container
         uses: docker/build-push-action@v3
         with:
           file: Dockerfile
@@ -60,10 +44,26 @@ jobs:
           target: debug-gnu
           tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:debug-gnu,${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.version }}.${{ github.run_number }}-gnu-debug
 
-      - name: Push the runner container
+      - name: Push the gnu runner container
         uses: docker/build-push-action@v3
         with:
           file: Dockerfile
           push: true
           target: prod-gnu
           tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest-gnu,${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.version }}.${{ github.run_number }}-gnu
+
+      - name: Push the musl debug container
+        uses: docker/build-push-action@v3
+        with:
+          file: Dockerfile
+          push: true
+          target: debug
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:debug,${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.version }}.${{ github.run_number }}-debug
+
+      - name: Push the musl runner container
+        uses: docker/build-push-action@v3
+        with:
+          file: Dockerfile
+          push: true
+          target: prod
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest,${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.version }}.${{ github.run_number }}
