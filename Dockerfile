@@ -61,7 +61,7 @@ RUN chmod -rw ./bin/*
 # tools. This could be used to debug the prod binary.
 # An additional candidate could be mcr.microsoft.com/cbl-mariner/distroless/debug:2.0, but
 # when this was created I was getting `trivy` vuln flags for that image.
-FROM alpine:debug as debug
+FROM alpine:latest as debug
 
 COPY --from=builder /app/bin/websvc /websvc
 COPY --from=builder /app/bin/healthcheck /healthcheck
@@ -97,7 +97,7 @@ CMD ["/websvc"]
 # tools. This could be used to debug the prod binary.
 # An additional candidate could be mcr.microsoft.com/cbl-mariner/distroless/debug:2.0, but
 # when this was created I was getting `trivy` vuln flags for that image.
-FROM alpine:debug as gnu-debug
+FROM alpine:latest as gnu-debug
 
 COPY --from=builder /app/bin/websvc-gnu /websvc
 COPY --from=builder /app/bin/healthcheck /healthcheck
