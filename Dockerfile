@@ -48,14 +48,17 @@ RUN cargo build -p websvc --release --target $(arch)-unknown-linux-musl
 # We want the health check to be minimal, and performance isn't a big concern for it
 RUN cargo build -p healthcheck --release --target $(arch)-unknown-linux-musl
 
-# Coalesce all the compiled binaries into a final directory so it's easier to copy in the next stage
-RUN mkdir ./bin && \
+# Coalesce all the compiled binaries into a final directory for each output
+# so it's easier to copy in the next stage
+RUN mkdir ./bin ./bin-gnu && \
 	mv ./target/$(arch)-unknown-linux-musl/release/websvc \
 	./target/$(arch)-unknown-linux-musl/release/healthcheck  ./bin \
-	&& mv ./target/$(arch)-unknown-linux-gnu/release/websvc ./bin/websvc-gnu
+	&& mv ./target/$(arch)-unknown-linux-gnu/release/websvc ./bin-gnu \
+	&& cp ./bin/healthcheck ./bin-gnu
 
 # Prevent reading+writing to the binaries, making them execute-only
-RUN chmod -rw ./bin/*
+RUN chmod -rw ./bin/* \
+	&& chmod -rw ./bin-gnu/*
 
 # Create a debug container with things like a shell and package manager for additional
 # tools. This could be used to debug the prod binary.
@@ -63,8 +66,7 @@ RUN chmod -rw ./bin/*
 # when this was created I was getting `trivy` vuln flags for that image.
 FROM alpine:latest as debug
 
-COPY --from=builder /app/bin/websvc /websvc
-COPY --from=builder /app/bin/healthcheck /healthcheck
+COPY --from=builder /app/bin/ /
 
 ENV ROCKET_ADDRESS 0.0.0.0
 ENV ROCKET_PORT 8000
@@ -80,8 +82,7 @@ CMD ["/websvc"]
 # provides filesystem, tzdata, and prebuilt-ca-certificates.
 FROM scratch as prod
 
-COPY --from=builder /app/bin/websvc /websvc
-COPY --from=builder /app/bin/healthcheck /healthcheck
+COPY --from=builder /app/bin/ /
 
 ENV ROCKET_ADDRESS 0.0.0.0
 ENV ROCKET_PORT 8000
@@ -99,8 +100,7 @@ CMD ["/websvc"]
 # when this was created I was getting `trivy` vuln flags for that image.
 FROM alpine:latest as debug-gnu
 
-COPY --from=builder /app/bin/websvc-gnu /websvc
-COPY --from=builder /app/bin/healthcheck /healthcheck
+COPY --from=builder /app/bin-gnu /
 
 ENV ROCKET_ADDRESS 0.0.0.0
 ENV ROCKET_PORT 8000
@@ -116,8 +116,7 @@ CMD ["/websvc"]
 # provides filesystem, tzdata, and prebuilt-ca-certificates.
 FROM scratch as prod-gnu
 
-COPY --from=builder /app/bin/websvc-gnu /websvc
-COPY --from=builder /app/bin/healthcheck /healthcheck
+COPY --from=builder /app/bin-gnu /
 
 ENV ROCKET_ADDRESS 0.0.0.0
 ENV ROCKET_PORT 8000
