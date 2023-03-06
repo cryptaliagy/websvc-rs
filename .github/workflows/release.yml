@@ -51,3 +51,19 @@ jobs:
           push: true
           target: prod
           tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest,${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.version }}.${{ github.run_number }}
+
+      - name: Push the debug container
+        uses: docker/build-push-action@v3
+        with:
+          file: Dockerfile
+          push: true
+          target: gnu-debug
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:gnu-debug,${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.version }}.${{ github.run_number }}-gnu-debug
+
+      - name: Push the runner container
+        uses: docker/build-push-action@v3
+        with:
+          file: Dockerfile
+          push: true
+          target: gnu-prod
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:gnu-latest,${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.version }}.${{ github.run_number }}-gnu
