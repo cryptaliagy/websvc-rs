@@ -97,7 +97,7 @@ CMD ["/websvc"]
 # tools. This could be used to debug the prod binary.
 # An additional candidate could be mcr.microsoft.com/cbl-mariner/distroless/debug:2.0, but
 # when this was created I was getting `trivy` vuln flags for that image.
-FROM alpine:latest as gnu-debug
+FROM alpine:latest as debug-gnu
 
 COPY --from=builder /app/bin/websvc-gnu /websvc
 COPY --from=builder /app/bin/healthcheck /healthcheck
@@ -114,7 +114,7 @@ CMD ["/websvc"]
 
 # Another candidate base could be mcr.microsoft.com/cbl-mariner/distroless/minimal:2.0 which
 # provides filesystem, tzdata, and prebuilt-ca-certificates.
-FROM scratch as gnu-prod
+FROM scratch as prod-gnu
 
 COPY --from=builder /app/bin/websvc-gnu /websvc
 COPY --from=builder /app/bin/healthcheck /healthcheck
