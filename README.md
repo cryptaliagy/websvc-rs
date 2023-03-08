@@ -2,6 +2,7 @@
 
 [![release](https://github.com/taliamax/websvc-rs/actions/workflows/release.yml/badge.svg)](https://github.com/taliamax/websvc-rs/actions/workflows/release.yml)
 [![tests](https://github.com/taliamax/websvc-rs/actions/workflows/tests.yml/badge.svg)](https://github.com/taliamax/websvc-rs/actions/workflows/tests.yml)
+[![nightly-scan](https://github.com/taliamax/websvc-rs/actions/workflows/nightly-scan.yml/badge.svg)](https://github.com/taliamax/websvc-rs/actions/workflows/nightly-scan.yml)
 
 This is a template repository meant to be used as a starting point for developing a new Rust-based microservice. This handles most of the key bootstrapping elements that I require when creating a new service.
 
@@ -47,6 +48,10 @@ This is a template repository meant to be used as a starting point for developin
    - Publishes Prod + Debug container to github packages
    - Major & Minor version tracked through `VERSION` file
    - Patch version tracked through pipeline
+1. A nightly (and manually-runnable) pipeline for security scanning that:
+   - Scans the `latest`/`latest-gnu`/`debug`/`debug-gnu` containers in the registry
+   - Builds all deployed container targets and scans them at the current SHA
+   - Runs the `cargo audit` security scan for cargo dependencies
 
 ### Benchmarks & Performance
 
