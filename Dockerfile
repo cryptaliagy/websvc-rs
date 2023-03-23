@@ -60,11 +60,15 @@ RUN mkdir ./bin ./bin-gnu && \
 RUN chmod -rw ./bin/* \
 	&& chmod -rw ./bin-gnu/*
 
+FROM alpine:latest as patched
+
+RUN apk update && apk upgrade --no-cache
+
 # Create a debug container with things like a shell and package manager for additional
 # tools. This could be used to debug the prod binary.
 # An additional candidate could be mcr.microsoft.com/cbl-mariner/distroless/debug:2.0, but
 # when this was created I was getting `trivy` vuln flags for that image.
-FROM alpine:latest as debug
+FROM patched as debug
 
 COPY --from=builder /app/bin/ /
 
@@ -98,7 +102,7 @@ CMD ["/websvc"]
 # tools. This could be used to debug the prod binary.
 # An additional candidate could be mcr.microsoft.com/cbl-mariner/distroless/debug:2.0, but
 # when this was created I was getting `trivy` vuln flags for that image.
-FROM alpine:latest as debug-gnu
+FROM patched as debug-gnu
 
 COPY --from=builder /app/bin-gnu /
 
