@@ -1,5 +1,5 @@
-# Rust 1.67.1 is latest as of Feb 24, 2023
-FROM rust:1.67.1 as dev
+# Rust 1.69.0 is latest as of Apr 20, 2023
+FROM rust:1.69.0 as dev
 
 # Install the targets
 RUN rustup target add $(arch)-unknown-linux-musl $(arch)-unknown-linux-gnu
@@ -10,6 +10,7 @@ RUN rustup target add $(arch)-unknown-linux-musl $(arch)-unknown-linux-gnu
 ENV ROCKET_ADDRESS 0.0.0.0
 ENV ROCKET_PORT 8000
 ENV ROCKET_IDENT false
+ENV CARGO_REGISTRIES_CRATES_IO_PROTOCOL sparse
 
 WORKDIR /app
 
@@ -20,14 +21,14 @@ RUN mkdir src && echo "fn main() {}" > src/main.rs \
 	&& cargo new --bin healthcheck \
 	&& cargo build \
 	&& cargo test \
-	&& rm src/main.rs \
-	&& rm -rf target/release/deps/websvc*
+	&& rm src/main.rs
 
 COPY src ./src
 
 COPY healthcheck ./healthcheck
 
-RUN cargo test \
+RUN touch -am src/main.rs \
+	&& cargo test \
 	&& cargo build \
 	&& cp -r ./target/debug out
 
